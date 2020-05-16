@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Hello LocalizeWiz</string>
+    <string name="how_do_you_say">How do you say \"cat\" in Japanese?</string>
+    <string name="cat">Cat</string>
+    <string name="change_language">Change Language</string>
+    <string name="select_language">Select A Language</string>
+    <string name="okay">Okay</string>
+    <string name="cancel">Cancel</string>
+    <string name="sorry">Sorry</string>
+    <string name="error_occurred">An error occurred</string>
+    <string name="chinese_simplified">Chinese Simplified</string>
+    <string name="english">English</string>
+    <string name="french">French</string>
+    <string name="german">German</string>
+    <string name="spanish">Spanish</string>
+    <string name="portuguese">Portuguese</string>
+    <string name="japanese">Japanese</string>
+    <!-- Strings used for fragments for navigation -->
+
+    <string name="todo">TODO</string>
+    <string name="language">Language</string>
+</resources>
