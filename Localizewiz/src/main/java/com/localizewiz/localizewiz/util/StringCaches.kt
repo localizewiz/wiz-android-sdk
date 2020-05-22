@@ -13,7 +13,7 @@ object StringCaches {
 
     fun saveLocalizedStrings(strings: Array<LocalizedString>, languageCode: String) {
         val cache = Cache()
-        strings.forEach { cache.set(it.name, it) }
+        strings.forEach { cache[it.name] = it }
         caches[languageCode] = cache
     }
 
@@ -29,11 +29,11 @@ object StringCaches {
 class Cache {
     private var store = mutableMapOf<String, LocalizedString>()
 
-    fun set(key: String, value: LocalizedString) {
+    operator fun set(key: String, value: LocalizedString) {
         store[key] = value
     }
 
-    fun get(key: String): LocalizedString? {
+    operator fun get(key: String): LocalizedString? {
         return store[key]
     }
 

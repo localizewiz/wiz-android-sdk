@@ -1,6 +1,5 @@
 package com.localizewiz.localizewiz.models
 
-import android.content.Context
 import com.localizewiz.localizewiz.Wiz
 import com.localizewiz.localizewiz.util.ResourceManager
 import com.localizewiz.localizewiz.util.StringCaches
@@ -8,18 +7,18 @@ import java.util.*
 
 class Project(
     var id: String,
-    var name: String,
-    var description: String,
-    var languageId: String,
-    var platform: String,
-    var created: Date,
-    var updated: Date,
-    var iconUrl: String?,
-    var workspaceId: String?,
-    var workspace: Workspace?,
-    var language: Language?,
-    var languages: Array<Language>,
-    var isInitialized: Boolean?
+    var name: String? = null,
+    var description: String? = null,
+    var languageId: String? = null,
+    var platform: String? = null,
+    var created: Date? = null,
+    var updated: Date? = null,
+    var iconUrl: String? = null,
+    var workspaceId: String? = null,
+    var workspace: Workspace? = null,
+    var language: Language? = null,
+    var languages: Array<Language>? = null,
+    var isInitialized: Boolean? = false
 ) {
 
     private var localizations = StringCaches

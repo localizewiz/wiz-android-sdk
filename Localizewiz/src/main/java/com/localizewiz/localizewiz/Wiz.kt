@@ -4,21 +4,17 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.os.Build
 import android.util.Log
-import com.localizewiz.localizewiz.models.LocalizedString
 import com.localizewiz.localizewiz.models.Project
 import com.localizewiz.localizewiz.models.Workspace
 import com.localizewiz.localizewiz.models.responses.LocalizedStringEnvelope
-import com.localizewiz.localizewiz.network.WizApi
-import com.localizewiz.localizewiz.network.WizApiBuilder
 import com.localizewiz.localizewiz.network.WizApiService
 import com.localizewiz.localizewiz.util.ResourceManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
-
-const val a = 1
 
 class Wiz private constructor(internal var context: Context) {
 
@@ -33,6 +29,8 @@ class Wiz private constructor(internal var context: Context) {
     var workspace: Workspace? = null
         private set
 
+    var listeners: MutableList<()->Unit> = mutableListOf()
+
     companion object {
         @Volatile var instance: Wiz? = null
             private set
@@ -40,9 +38,9 @@ class Wiz private constructor(internal var context: Context) {
         private const val KEY_API_KEY = "com.localizewiz.wiz.apiKey"
         private const val KEY_PROJECT_ID = "com.localizewiz.wiz.projectId"
 
-        fun createInstance(context: Context): Wiz {
+        private fun createInstance(context: Context): Wiz {
             return instance ?: synchronized(this) {
-                Wiz(context)
+                return instance ?: Wiz(context)
             }
         }
 
@@ -60,18 +58,25 @@ class Wiz private constructor(internal var context: Context) {
 
         private fun readConfigSettings(context: Context) : Config {
             val metadata = context.packageManager.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA).metaData
-            val apiKey = metadata.getString(KEY_API_KEY)
-            var projectId = metadata.getString(KEY_PROJECT_ID)
+            val apiKey = metadata.getString(KEY_API_KEY) ?: ""
+            var projectId = metadata.getString(KEY_PROJECT_ID) ?: ""
             Log.d("Wiz.object", "config pros {apiKey = $apiKey, projectId = $projectId}")
             return Config(apiKey, projectId.toString())
         }
 
 
-        fun configure(context: Context, apiKey: String, projectId: String, language: String? = "en") {
+        fun configure(context: Context, apiKey: String, projectId: String, language: String? = null) {
             instance = createInstance(context)
             val config = Config(apiKey, projectId)
             instance?.config = config
             instance?.apiService = WizApiService(config = config)
+            @Suppress("DEPRECATION") val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                context.resources.configuration.locales.get(0)
+            } else {
+                context.resources.configuration.locale
+            }
+            instance?.currentLanguageCode = language ?: locale.language
+            instance?.project = Project(projectId)
             Log.d("Wiz.object", "config props {apiKey = $apiKey, projectId = $projectId}")
             instance?.loadProject()
         }
@@ -79,6 +84,10 @@ class Wiz private constructor(internal var context: Context) {
 
     fun refresh(completion: (()-> Unit)? = null) {
         val languageCode = currentLanguageCode
+        refreshLanguage(languageCode, completion)
+    }
+
+    fun refreshLanguage(languageCode: String, completion: (() -> Unit)? = null) {
         project?.let { project ->
             val call = apiService?.getStringTranslations(project.id, languageCode)
             call?.enqueue(object : Callback<LocalizedStringEnvelope> {
@@ -87,13 +96,14 @@ class Wiz private constructor(internal var context: Context) {
                     if (response.isSuccessful) {
                         val strings = response.body()?.strings
                         Log.d(LOG_TAG, "Fetched project strings: $strings")
-                        val let = strings?.let {
+                        strings?.let {
                             strings.forEach {
                                 Log.d(LOG_TAG, "string => $it")
                             }
                             project.saveStrings(strings, languageCode)
                         }
                     }
+                    notifyListeners()
                     completion?.invoke()
                 }
 
@@ -110,15 +120,22 @@ class Wiz private constructor(internal var context: Context) {
         this.refresh(completion)
     }
 
-    fun getString(resourceId: Int): String? {
+    fun getString(resourceId: Int, languageCode: String): String {
         val resourceKey = context.resources.getResourceEntryName(resourceId)
-        val wizString = project?.getString(resourceKey, currentLanguageCode)
+        val wizString = project?.getString(resourceKey, languageCode)
         Log.d(LOG_TAG, "Getting string for {id=$resourceId, key=$resourceKey, str=$wizString}")
         return wizString ?: context.resources.getString(resourceId)
     }
+    fun getString(resourceId: Int): String? {
+        return getString(resourceId, currentLanguageCode)
+    }
 
     fun getString(resourceKey: String): String {
-        val wizString = project?.getString(resourceKey, currentLanguageCode)
+        return getString(resourceKey, currentLanguageCode)
+    }
+
+    fun getString(resourceKey: String, languageCode: String): String {
+        val wizString = project?.getString(resourceKey, languageCode)
         return wizString?: resourceKey
     }
 
@@ -159,8 +176,10 @@ class Wiz private constructor(internal var context: Context) {
         }
     }
 
-    private fun notifyOfLanguageChange() {
-
+    private fun notifyListeners() {
+        listeners.forEach { t ->
+            t.invoke()
+        }
     }
 }
 
@@ -176,5 +195,3 @@ internal inline fun <reified T: Class<R.string>> T.getStringId(resourceName: Str
         -1
     }
 }
-
-
