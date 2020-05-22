@@ -1,8 +1,6 @@
 package com.localizewiz.hello
 
 import android.os.Bundle
-import android.widget.AdapterView
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,12 +24,21 @@ class ChangeLanguageActivity : AppCompatActivity(), LanguageSelector {
         setupRecyclerView()
     }
 
+    override fun onResume() {
+        super.onResume()
+        this.updateStrings()
+    }
+
     private fun setupRecyclerView() {
         val project = Wiz.instance!!.project
         viewManager = LinearLayoutManager(this)
 
         // TODO: project can be null
-        viewAdapter = LanguageListAdapter(project!!.languages, this)
+        var languages = project!!.languages?.toMutableList()
+        project.language?.let {
+            languages?.add(0, it)
+        }
+        viewAdapter = LanguageListAdapter(languages ?: listOf(), this)
 
         recyclerView = findViewById<RecyclerView>(R.id.languageRecyclerView).apply {
             setHasFixedSize(true)

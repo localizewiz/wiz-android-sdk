@@ -10,7 +10,7 @@ import com.localizewiz.localizewiz.Wiz
 import com.localizewiz.localizewiz.models.Language
 import com.squareup.picasso.Picasso
 
-class LanguageListAdapter (private var languages: Array<Language>, private var languageSelector: LanguageSelector) :
+class LanguageListAdapter (private var languages: List<Language>, private var languageSelector: LanguageSelector) :
     RecyclerView.Adapter<LanguageListAdapter.MyViewHolder>() {
 
     private var selectedPosition = -1
@@ -33,7 +33,6 @@ class LanguageListAdapter (private var languages: Array<Language>, private var l
         // create a new view
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.row_language, parent, false)
-        // set the view's size, margins, paddings and layout parameters
         return MyViewHolder(view)
     }
 
@@ -51,7 +50,7 @@ class LanguageListAdapter (private var languages: Array<Language>, private var l
         }
     }
 
-    // Return the size of your dataset (invoked by the layout manager)
+    // Return the size of your data set (invoked by the layout manager)
     override fun getItemCount() = languages.size
 
     fun refresh() {

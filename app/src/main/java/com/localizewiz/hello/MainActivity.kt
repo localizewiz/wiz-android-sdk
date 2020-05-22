@@ -3,9 +3,6 @@ package com.localizewiz.hello
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import com.localizewiz.localizewiz.Wiz
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -19,32 +16,29 @@ class MainActivity : AppCompatActivity() {
         floatingActionButton.setOnClickListener {
             this.showChangeLanguage()
         }
+
+        this.updateText()
+        this.loadJapanese()
+        wiz?.listeners?.add {
+            this.updateText()
+        }
     }
 
-    override fun onResume() {
-        super.onResume()
-        wiz?.refresh {
-            mainMessage.text = wiz?.getString(R.string.how_do_you_say) ?: ""
-        }
+    private fun updateText() {
+        // This will show the text in the device locale language
         mainMessage.text = wiz?.getString(R.string.how_do_you_say) ?: ""
+        this.title = wiz?.getString(R.string.app_name)
+
+        // You can display text in a specific language that is not the device locale language.
+        // Just remember to load that language explicitly first
+        catTextView.text = wiz?.getString(R.string.cat, "ja")
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.mainmenu, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        val id = item?.itemId
-        if (id == R.id.changeLanguageMenu) {
-            Log.d("MainActivity", "Menu selected")
-            this.showChangeLanguage()
-        }
-        return super.onOptionsItemSelected(item)
+    private fun loadJapanese() {
+        wiz?.refreshLanguage("ja")
     }
 
     private fun showChangeLanguage() {
-        Log.d("*****CHANGE", "**************************")
         val intent = Intent(this, ChangeLanguageActivity::class.java)
         startActivity(intent)
     }
