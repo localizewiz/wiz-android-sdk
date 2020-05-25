@@ -30,11 +30,11 @@ class ChangeLanguageActivity : AppCompatActivity(), LanguageSelector {
     }
 
     private fun setupRecyclerView() {
-        val project = Wiz.instance!!.project
+        val project = wiz.project
         viewManager = LinearLayoutManager(this)
 
         // TODO: project can be null
-        var languages = project!!.languages?.toMutableList()
+        val languages = project!!.languages?.toMutableList()
         project.language?.let {
             languages?.add(0, it)
         }
@@ -54,8 +54,8 @@ class ChangeLanguageActivity : AppCompatActivity(), LanguageSelector {
 
     private fun changeSelectedLanguage() {
        selectedLanguage?.let {
-           wiz?.setLanguage(it.isoCode) {
-                this.updateStrings()
+           wiz.changeLanguage(it.isoCode) {
+               this.updateStrings()
                viewAdapter.refresh()
            }
        }

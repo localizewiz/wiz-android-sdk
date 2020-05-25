@@ -18,7 +18,7 @@ import java.util.*
 
 class Wiz private constructor(internal var context: Context) {
 
-    private val LOG_TAG = "LocalizeWiz - Wizzie"
+    private val logTag = "LocalizeWiz - Wizzie"
     private var resources: Resources? = null
     private var config: Config? = null
     private var apiService: WizApiService? = null
@@ -32,21 +32,22 @@ class Wiz private constructor(internal var context: Context) {
     var listeners: MutableList<()->Unit> = mutableListOf()
 
     companion object {
-        @Volatile var instance: Wiz? = null
+        @Volatile lateinit var instance: Wiz
             private set
+        private var _instance: Wiz? = null
 
         private const val KEY_API_KEY = "com.localizewiz.wiz.apiKey"
         private const val KEY_PROJECT_ID = "com.localizewiz.wiz.projectId"
 
         private fun getInstance(context: Context): Wiz {
-            return instance ?: synchronized(this) {
-                return instance ?: Wiz(context)
+            return _instance ?: synchronized(this) {
+                return _instance ?: Wiz(context).also { _instance = it }
             }
         }
 
         fun getManifestInstance(context: Context): Wiz =
-            instance ?: synchronized(this) {
-                instance ?: setup(context).also { instance = it }
+            _instance ?: synchronized(this) {
+                _instance ?: setup(context).also { _instance = it }
             }
 
         private fun setup(context: Context): Wiz {
@@ -68,6 +69,7 @@ class Wiz private constructor(internal var context: Context) {
             instance = getInstance(context)
             val config = Config(apiKey, projectId)
             instance?.config = config
+            instance?.project = Project(projectId)
             instance?.apiService = WizApiService(config = config)
             @Suppress("DEPRECATION") val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 context.resources.configuration.locales.get(0)
@@ -75,7 +77,6 @@ class Wiz private constructor(internal var context: Context) {
                 context.resources.configuration.locale
             }
             instance?.currentLanguageCode = language ?: locale.language
-            instance?.project = Project(projectId)
             Log.d("Wiz.object", "config props {apiKey = $apiKey, projectId = $projectId}")
             instance?.loadProject()
         }
@@ -94,10 +95,10 @@ class Wiz private constructor(internal var context: Context) {
                 override fun onResponse( call: Call<LocalizedStringEnvelope>, response: Response<LocalizedStringEnvelope>) {
                     if (response.isSuccessful) {
                         val strings = response.body()?.strings
-                        Log.d(LOG_TAG, "Fetched project strings: $strings")
+                        Log.d(logTag, "Fetched project strings: $strings")
                         strings?.let {
                             strings.forEach {
-                                Log.d(LOG_TAG, "string => $it")
+                                Log.d(logTag, "string => $it")
                             }
                             project.saveStrings(strings, languageCode)
                         }
@@ -107,24 +108,31 @@ class Wiz private constructor(internal var context: Context) {
                 }
 
                 override fun onFailure(call: Call<LocalizedStringEnvelope>, t: Throwable) {
-                    Log.e(LOG_TAG, "Get project strings failed with error: $t")
+                    Log.e(logTag, "Get project strings failed with error: $t")
                     completion?.invoke()
                 }
             })
         }
     }
 
-    fun setLanguage(languageCode: String, completion: (()-> Unit)? = null) {
-        this.currentLanguageCode = languageCode
+    fun changeLanguage(languageCode: String, completion: (()-> Unit)? = null) {
+        this.setLanguage(languageCode)
         this.refresh(completion)
+    }
+
+    private fun setLanguage(languageCode: String) {
+        this.currentLanguageCode = languageCode
+        val locale = Locale(languageCode)
+        this.setLocale(locale)
     }
 
     fun getString(resourceId: Int, languageCode: String): String {
         val resourceKey = context.resources.getResourceEntryName(resourceId)
         val wizString = project?.getString(resourceKey, languageCode)
-        Log.d(LOG_TAG, "Getting string for {id=$resourceId, key=$resourceKey, str=$wizString}")
-        return wizString ?: context.resources.getString(resourceId)
+        Log.d(logTag, "Getting string for {id=$resourceId, key=$resourceKey, str=$wizString}")
+        return wizString ?: this.resources?.getString(resourceId) ?: context.resources.getString(resourceId)
     }
+
     fun getString(resourceId: Int): String? {
         return getString(resourceId, currentLanguageCode)
     }
@@ -138,7 +146,7 @@ class Wiz private constructor(internal var context: Context) {
         return wizString?: resourceKey
     }
 
-    fun setLocale(locale: Locale) {
+    private fun setLocale(locale: Locale) {
         var conf: Configuration = context.resources.configuration
         conf = Configuration(conf)
         conf.setLocale(locale)
@@ -153,13 +161,13 @@ class Wiz private constructor(internal var context: Context) {
     private fun loadProject() {
         config?.let {
             val call = apiService?.getProjectDetails(it.projectId)
-            Log.d(LOG_TAG, "about to make network call")
+            Log.d(logTag, "about to make network call")
             call?.enqueue(object : Callback<Project> {
 
                 override fun onResponse(call: Call<Project>, response: Response<Project>) {
                     if (response.isSuccessful) {
                         val project = response.body()
-                        Log.d(LOG_TAG, "Loading project succeeded with project: $project")
+                        Log.d(logTag, "Loading project succeeded with project: $project")
                         this@Wiz.project = project
                         this@Wiz.workspace = project?.workspace
 
@@ -169,7 +177,7 @@ class Wiz private constructor(internal var context: Context) {
                 }
 
                 override fun onFailure(call: Call<Project>?, t: Throwable?) {
-                    Log.e(LOG_TAG, "Loading project failed with error: $t")
+                    Log.e(logTag, "Loading project failed with error: $t")
                 }
             })
         }
