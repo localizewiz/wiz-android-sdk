@@ -68,17 +68,17 @@ class Wiz private constructor(internal var context: Context) {
         fun configure(context: Context, apiKey: String, projectId: String, language: String? = null) {
             instance = getInstance(context)
             val config = Config(apiKey, projectId)
-            instance?.config = config
-            instance?.project = Project(projectId)
-            instance?.apiService = WizApiService(config = config)
+            instance.config = config
+            instance.project = Project(projectId)
+            instance.apiService = WizApiService(config = config)
             @Suppress("DEPRECATION") val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 context.resources.configuration.locales.get(0)
             } else {
                 context.resources.configuration.locale
             }
-            instance?.currentLanguageCode = language ?: locale.language
+            instance.currentLanguageCode = language ?: locale.language
             Log.d("Wiz.object", "config props {apiKey = $apiKey, projectId = $projectId}")
-            instance?.loadProject()
+            instance.loadProject()
         }
     }
 
@@ -155,7 +155,7 @@ class Wiz private constructor(internal var context: Context) {
     }
 
     internal fun saveCurrentProject() {
-
+        // TODO: Implement project caching
     }
 
     private fun loadProject() {

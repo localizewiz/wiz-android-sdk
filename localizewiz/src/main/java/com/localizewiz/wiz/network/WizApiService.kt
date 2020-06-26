@@ -30,7 +30,7 @@ object  WizApiBuilder {
             .addNetworkInterceptor(loggingInterceptor)
             .build())
             .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl("https://dev.api.localizewiz.com")
+            .baseUrl("https://api.localizewiz.com")
         .build()
 
     fun<T> buildService(service: Class<T>, config: Config): T {

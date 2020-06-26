@@ -7,6 +7,6 @@ class WizApplication: Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Wiz.configure(context = this, apiKey = "wiz_c44cbfd8d665b9b6db7c049fae4d1c9d", projectId = "164567725610370375")
+        Wiz.configure(context = this, apiKey = "wiz_fa63b250438705bbeccf016361ffb602", projectId = "24037786491290786")
     }
 }
