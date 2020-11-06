@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.localizewiz.wiz.Wiz
 import com.localizewiz.wiz.models.Language
 
 import kotlinx.android.synthetic.main.activity_change_language.*
@@ -15,7 +14,6 @@ class ChangeLanguageActivity : AppCompatActivity(), LanguageSelector {
     private lateinit var viewAdapter: LanguageListAdapter
     private lateinit var viewManager: RecyclerView.LayoutManager
     private var selectedLanguage: Language? = null
-    private var wiz = Wiz.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +47,7 @@ class ChangeLanguageActivity : AppCompatActivity(), LanguageSelector {
     }
 
     private fun updateStrings() {
-        toolbar.title = wiz?.getString(R.string.change_language)
+        toolbar.title = wiz.getString(R.string.change_language)
     }
 
     private fun changeSelectedLanguage() {

@@ -14,7 +14,7 @@ import com.localizewiz.wiz.util.ResourceManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.util.*
+import java.util.Locale
 
 class Wiz private constructor(internal var context: Context) {
 
@@ -65,7 +65,7 @@ class Wiz private constructor(internal var context: Context) {
             return Config(apiKey, projectId.toString())
         }
 
-        fun configure(context: Context, apiKey: String, projectId: String, language: String? = null) {
+        fun setup(context: Context, apiKey: String, projectId: String, language: String? = null) {
             instance = getInstance(context)
             val config = Config(apiKey, projectId)
             instance.config = config
@@ -113,6 +113,10 @@ class Wiz private constructor(internal var context: Context) {
                 }
             })
         }
+    }
+
+    fun addLanguageChangeListener(listener: ()-> Unit) {
+        this.listeners.add(listener)
     }
 
     fun changeLanguage(languageCode: String, completion: (()-> Unit)? = null) {
